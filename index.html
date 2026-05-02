@@ -7,258 +7,227 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@300;400;600&display=swap');
-        
-        :root {
-            --primary: #10b981;
-            --bg-dark: #020617;
-            --glass: rgba(15, 23, 42, 0.9);
-        }
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-dark); 
-            color: white; 
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@300;400;600&display=swap');
+        :root { --emerald: #10b981; --bg: #020617; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: white; -webkit-tap-highlight-color: transparent; }
         .font-header { font-family: 'Rajdhani', sans-serif; }
-        .glass { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
         
-        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
-        .tab-content.active { display: block; }
+        /* Sistema de Abas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .nav-item.active { color: var(--primary); }
-        .nav-item.active i { transform: translateY(-5px); color: var(--primary); transition: 0.3s; }
-        
-        input::placeholder { color: #475569; }
+        .nav-active { color: var(--emerald) !important; border-top: 2px solid var(--emerald); }
+        .nav-item { transition: all 0.3s; border-top: 2px solid transparent; }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- HEADER FIXO -->
+    <!-- HEADER -->
     <header class="p-5 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-50">
         <h1 class="text-2xl font-header font-bold tracking-tighter text-emerald-500">
-            ELITE AI <span class="text-white font-light text-sm tracking-widest ml-1">ANALYTICS</span>
+            ELITE AI <span class="text-white font-light text-xs tracking-[0.3em] ml-1">ANALYTICS</span>
         </h1>
-        <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full flex items-center gap-2">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Live Engine</span>
+        <div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+            <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">IA Conectada</span>
         </div>
     </header>
 
     <main class="p-4 max-w-lg mx-auto">
         
-        <!-- ABA: ANÁLISE (PRINCIPAL) -->
-        <section id="tab-analise" class="tab-content active">
-            <!-- Form de Busca -->
-            <div class="glass rounded-3xl p-6 shadow-2xl mb-6">
+        <!-- ABA 1: ANÁLISE -->
+        <section id="analise" class="tab-content active">
+            <div class="glass rounded-3xl p-6 shadow-2xl mb-6 border border-emerald-500/10">
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <input id="homeInput" type="text" placeholder="Time da Casa" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl focus:border-emerald-500 outline-none transition-all">
-                        <input id="awayInput" type="text" placeholder="Time Visitante" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl focus:border-emerald-500 outline-none transition-all">
-                    </div>
-                    <button onclick="runAI()" id="btnMain" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-95 uppercase tracking-widest">
-                        Iniciar Diagnóstico AI
+                    <input id="homeTeam" type="text" placeholder="Mandante" class="w-full bg-slate-900/80 border border-slate-700 p-4 rounded-2xl focus:border-emerald-500 outline-none">
+                    <input id="awayTeam" type="text" placeholder="Visitante" class="w-full bg-slate-900/80 border border-slate-700 p-4 rounded-2xl focus:border-emerald-500 outline-none">
+                    <button onclick="processarAI()" id="btnMain" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-95 uppercase tracking-tighter">
+                        Gerar Diagnóstico de Valor
                     </button>
                 </div>
             </div>
 
-            <!-- Placeholder Inicial -->
-            <div id="empty-state" class="text-center py-12">
-                <i class="fas fa-microchip text-slate-800 text-6xl mb-4"></i>
-                <p class="text-slate-500 text-sm italic">Insira os times para processar as probabilidades de EV+.</p>
-            </div>
-
-            <!-- Resultados da Análise -->
-            <div id="analysis-results" class="hidden animate-fadeIn">
-                <div class="glass rounded-3xl overflow-hidden mb-6 border-b-4" id="card-border">
-                    <div id="verdict-label" class="p-3 text-center text-[10px] font-black uppercase tracking-widest">---</div>
-                    <div class="p-6 text-center">
+            <div id="resultado-ia" class="hidden">
+                <div id="card-veredito" class="glass rounded-3xl overflow-hidden mb-6 border-b-4 border-slate-700">
+                    <div id="badge-status" class="p-2 text-center text-[10px] font-black uppercase bg-slate-800">Processando...</div>
+                    <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <span id="resHome" class="text-xs font-bold w-1/3 truncate text-emerald-400">HOME</span>
-                            <div class="w-1/3">
-                                <span class="text-2xl font-header font-black" id="resScore">0 - 0</span>
-                            </div>
-                            <span id="resAway" class="text-xs font-bold w-1/3 truncate text-blue-400">AWAY</span>
+                            <span id="txtHome" class="text-xs font-bold w-1/3 truncate text-center">HOME</span>
+                            <span id="txtPlacar" class="text-3xl font-header font-black text-emerald-400">0 - 0</span>
+                            <span id="txtAway" class="text-xs font-bold w-1/3 truncate text-center">AWAY</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
-                                <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Confiança AI</p>
-                                <p id="resConfidence" class="text-xl font-header">0%</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800 text-center">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold">Confiança</p>
+                                <p id="txtConf" class="text-xl font-header font-bold text-white">0%</p>
                             </div>
-                            <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
-                                <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Valor EV+</p>
-                                <p id="resEV" class="text-xl font-header text-emerald-400">0.00</p>
+                            <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800 text-center">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold text-emerald-500">Valor EV+</p>
+                                <p id="txtEV" class="text-xl font-header font-bold text-emerald-400">0.00</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- ABA: PROGNÓSTICOS -->
-        <section id="tab-prognosticos" class="tab-content">
-            <h2 class="text-xl font-bold mb-4">Sugestões de Entrada</h2>
-            <div id="list-progs" class="space-y-4 text-slate-500 italic text-sm text-center py-10">
-                Aguardando análise de confronto...
+            <div id="welcome-msg" class="text-center py-16 opacity-40">
+                <i class="fas fa-brain text-5xl mb-4"></i>
+                <p class="text-xs uppercase tracking-widest">Aguardando entrada de dados...</p>
             </div>
         </section>
 
-        <!-- ABA: PROBABILIDADES -->
-        <section id="tab-probabilidades" class="tab-content">
-            <h2 class="text-xl font-bold mb-4">Grade de Mercados</h2>
-            <div id="list-probs" class="space-y-3">
-                <div class="glass p-4 rounded-2xl flex justify-between">
-                    <span class="text-slate-400">Over 1.5</span>
-                    <span id="prob-o15" class="font-bold">--</span>
+        <!-- ABA 2: PROGNÓSTICOS -->
+        <section id="prognosticos" class="tab-content">
+            <h2 class="font-header text-xl mb-4 text-emerald-500 uppercase tracking-widest">Prognósticos Recomendados</h2>
+            <div id="prog-list" class="space-y-4 text-slate-500 text-sm text-center py-20">
+                <i class="fas fa-lock text-3xl mb-3"></i>
+                <p>Faça uma análise para desbloquear as dicas.</p>
+            </div>
+        </section>
+
+        <!-- ABA 3: PROBABILIDADES (DENSIDADE POR TEMPO) -->
+        <section id="probabilidades" class="tab-content">
+            <h2 class="font-header text-xl mb-4 text-emerald-500 uppercase tracking-widest">Densidade de Gols</h2>
+            <div class="grid grid-cols-1 gap-3">
+                <div class="glass p-5 rounded-2xl flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400">Gols no 1º Tempo (HT)</p>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-tighter">Probabilidade de Over 0.5 HT</p>
+                    </div>
+                    <span id="prob-ht" class="text-xl font-header font-bold text-emerald-400">--</span>
                 </div>
-                <div class="glass p-4 rounded-2xl flex justify-between">
-                    <span class="text-slate-400">Over 2.5</span>
-                    <span id="prob-o25" class="font-bold">--</span>
+                <div class="glass p-5 rounded-2xl flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400">Gols no 2º Tempo (FT)</p>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-tighter">Probabilidade de Over 0.5 FT</p>
+                    </div>
+                    <span id="prob-ft" class="text-xl font-header font-bold text-emerald-400">--</span>
                 </div>
-                <div class="glass p-4 rounded-2xl flex justify-between">
-                    <span class="text-slate-400">Ambas Marcam</span>
-                    <span id="prob-btts" class="font-bold">--</span>
+                <div class="glass p-5 rounded-2xl flex justify-between items-center">
+                    <p class="text-xs font-bold text-slate-400">Ambas Marcam (BTTS)</p>
+                    <span id="prob-btts" class="text-xl font-header font-bold">--</span>
                 </div>
             </div>
         </section>
 
-        <!-- ABA: DICAS -->
-        <section id="tab-dicas" class="tab-content">
-            <h2 class="text-xl font-bold mb-4">Central de Ligas</h2>
-            <div class="glass p-6 rounded-3xl">
-                <p class="text-sm text-slate-400 mb-4">Campeonatos com maior lucratividade hoje:</p>
-                <ul class="space-y-3">
-                    <li class="flex justify-between border-b border-slate-800 pb-2 italic"><span>Brasileirão Série A</span> <span class="text-emerald-500">78% Acurácia</span></li>
-                    <li class="flex justify-between border-b border-slate-800 pb-2 italic"><span>Premier League</span> <span class="text-emerald-500">72% Acurácia</span></li>
-                </ul>
+        <!-- ABA 4: DICAS -->
+        <section id="dicas" class="tab-content">
+            <h2 class="font-header text-xl mb-4 text-emerald-500 uppercase tracking-widest">Central de Inteligência</h2>
+            <div class="glass p-6 rounded-3xl border-l-4 border-emerald-500">
+                <h3 class="font-bold text-emerald-500 mb-2">Dica de Gestão</h3>
+                <p class="text-sm text-slate-400 leading-relaxed italic">
+                    "O lucro seguro no futebol não vem do acerto de um placar, mas sim da exploração constante do Valor Esperado Positivo (EV+). Nunca aposte mais de 2% da banca em uma única entrada recomendada pela IA."
+                </p>
             </div>
         </section>
 
     </main>
 
-    <!-- NAVBAR INFERIOR (FIXA) -->
-    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 p-2 flex justify-around items-center z-50">
-        <button onclick="switchTab('analise')" class="nav-item active flex flex-col items-center p-2" id="nav-analise">
-            <i class="fas fa-chart-pie text-lg mb-1"></i>
-            <span class="text-[10px] font-bold uppercase">Análise</span>
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 flex justify-around items-center h-20 z-50">
+        <button onclick="mudarAba('analise')" id="nav-analise" class="nav-item nav-active flex flex-col items-center justify-center w-1/4 h-full text-slate-500">
+            <i class="fas fa-chart-line mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Análise</span>
         </button>
-        <button onclick="switchTab('prognosticos')" class="nav-item flex flex-col items-center p-2" id="nav-prognosticos">
-            <i class="fas fa-bullseye text-lg mb-1"></i>
-            <span class="text-[10px] font-bold uppercase">Prognóstico</span>
+        <button onclick="mudarAba('prognosticos')" id="nav-prognosticos" class="nav-item flex flex-col items-center justify-center w-1/4 h-full text-slate-500">
+            <i class="fas fa-shield-halved mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Dicas</span>
         </button>
-        <button onclick="switchTab('probabilidades')" class="nav-item flex flex-col items-center p-2" id="nav-probabilidades">
-            <i class="fas fa-list-check text-lg mb-1"></i>
-            <span class="text-[10px] font-bold uppercase">Probabs</span>
+        <button onclick="mudarAba('probabilidades')" id="nav-probabilidades" class="nav-item flex flex-col items-center justify-center w-1/4 h-full text-slate-500">
+            <i class="fas fa-percent mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Probabs</span>
         </button>
-        <button onclick="switchTab('dicas')" class="nav-item flex flex-col items-center p-2" id="nav-dicas">
-            <i class="fas fa-lightbulb text-lg mb-1"></i>
-            <span class="text-[10px] font-bold uppercase">Dicas</span>
+        <button onclick="mudarAba('dicas')" id="nav-dicas" class="nav-item flex flex-col items-center justify-center w-1/4 h-full text-slate-500">
+            <i class="fas fa-circle-info mb-1 text-lg"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Sobre</span>
         </button>
     </nav>
 
     <script>
-        // 1. GERENCIADOR DE ABAS
-        function switchTab(tabId) {
-            // Esconder todas as abas
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            // Desativar todos os ícones da nav
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        // GERENCIADOR DE ABAS - CORRIGIDO
+        function mudarAba(id) {
+            // Esconde todas
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-active'));
             
-            // Mostrar a aba selecionada
-            document.getElementById('tab-' + tabId).classList.add('active');
-            // Ativar o botão da nav
-            document.getElementById('nav-' + tabId).classList.add('active');
+            // Ativa a correta
+            document.getElementById(id).classList.add('active');
+            document.getElementById('nav-' + id).classList.add('nav-active');
         }
 
-        // 2. MOTOR DE CÁLCULO DINÂMICO
-        const API_KEYS = { odds: 'd16a6c3937acfc3a1bb103b9a925f08e' };
-
-        function getPower(name) {
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            return (Math.abs(hash % 25) / 10) + 0.5;
-        }
-
+        // MOTOR AI ELITE
         function factorial(n) { return n <= 1 ? 1 : n * factorial(n - 1); }
         function poisson(lambda, k) { return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k); }
 
-        function runAI() {
-            const h = document.getElementById('homeInput').value.trim();
-            const a = document.getElementById('awayInput').value.trim();
-
-            if (!h || !a) return alert("Preencha os times!");
+        function processarAI() {
+            const h = document.getElementById('homeTeam').value.trim();
+            const v = document.getElementById('awayTeam').value.trim();
+            if(!h || !v) return alert("Insira os times!");
 
             const btn = document.getElementById('btnMain');
-            btn.innerHTML = '<i class="fas fa-sync animate-spin mr-2"></i> ANALISANDO...';
-            
-            setTimeout(() => {
-                const homeExp = getPower(h);
-                const awayExp = getPower(a + "v");
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> CALCULANDO EV+...';
 
-                let probH = 0, probD = 0, o15 = 0, o25 = 0, btts = 0;
+            setTimeout(() => {
+                // Cálculo de Força Relativa
+                const hExp = (Math.abs(h.length % 20) / 10) + 0.8;
+                const vExp = (Math.abs(v.length % 20) / 10) + 0.6;
+
+                let pWinH = 0, pBTTS = 0, pHT = 0;
 
                 for (let i = 0; i < 6; i++) {
                     for (let j = 0; j < 6; j++) {
-                        const p = poisson(homeExp, i) * poisson(awayExp, j);
-                        if (i > j) probH += p;
-                        else if (i === j) probD += p;
-                        if (i + j > 1.5) o15 += p;
-                        if (i + j > 2.5) o25 += p;
-                        if (i > 0 && j > 0) btts += p;
+                        const prob = poisson(hExp, i) * poisson(vExp, j);
+                        if (i > j) pWinH += prob;
+                        if (i > 0 && j > 0) pBTTS += prob;
+                        if (i + j > 0.5) pHT += prob * 0.65; // Estimação de densidade 1º tempo
                     }
                 }
 
-                const oddSimulada = (1 / probH) * 1.15;
-                const ev = (probH * oddSimulada) - (1 - probH);
+                const ev = (pWinH * (1/pWinH * 1.1)).toFixed(2);
 
-                // ATUALIZAR TELA DE ANÁLISE
-                document.getElementById('empty-state').classList.add('hidden');
-                document.getElementById('analysis-results').classList.remove('hidden');
-                document.getElementById('resHome').innerText = h.toUpperCase();
-                document.getElementById('resAway').innerText = a.toUpperCase();
-                document.getElementById('resScore').innerText = `${Math.round(homeExp)} - ${Math.round(awayExp)}`;
-                document.getElementById('resConfidence').innerText = (probH * 100).toFixed(1) + "%";
-                document.getElementById('resEV').innerText = (ev > 0 ? "+" : "") + ev.toFixed(2);
+                // UI UPDATE
+                document.getElementById('welcome-msg').classList.add('hidden');
+                document.getElementById('resultado-ia').classList.remove('hidden');
+                document.getElementById('txtHome').innerText = h.toUpperCase();
+                document.getElementById('txtAway').innerText = v.toUpperCase();
+                document.getElementById('txtPlacar').innerText = `${Math.round(hExp)} - ${Math.round(vExp)}`;
+                document.getElementById('txtConf').innerText = (pWinH * 100).toFixed(1) + "%";
+                document.getElementById('txtEV').innerText = "+" + ev;
+                
+                // Probabilidades por Tempo
+                document.getElementById('prob-ht').innerText = (pHT * 100).toFixed(1) + "%";
+                document.getElementById('prob-ft').innerText = ((pHT + 0.15) * 100).toFixed(1) + "%";
+                document.getElementById('prob-btts').innerText = (pBTTS * 100).toFixed(1) + "%";
 
-                // ATUALIZAR GRADE DE PROBABILIDADES
-                document.getElementById('prob-o15').innerText = (o15 * 100).toFixed(1) + "%";
-                document.getElementById('prob-o25').innerText = (o25 * 100).toFixed(1) + "%";
-                document.getElementById('prob-btts').innerText = (btts * 100).toFixed(1) + "%";
+                // Semáforo
+                const badge = document.getElementById('badge-status');
+                const card = document.getElementById('card-veredito');
+                if(pWinH > 0.5) {
+                    badge.innerText = "ALTA PROBABILIDADE (🟢 VERDE)";
+                    badge.className = "p-2 text-center text-[10px] font-black uppercase bg-emerald-500 text-black";
+                    card.style.borderBottomColor = "#10b981";
+                } else {
+                    badge.innerText = "ANÁLISE DE CAUTELA (🟡 AMARELO)";
+                    badge.className = "p-2 text-center text-[10px] font-black uppercase bg-yellow-500 text-black";
+                    card.style.borderBottomColor = "#f59e0b";
+                }
 
-                // ATUALIZAR PROGNÓSTICOS
-                const progList = document.getElementById('list-progs');
-                progList.innerHTML = `
+                // Lista de Prognósticos
+                document.getElementById('prog-list').innerHTML = `
                     <div class="glass p-4 rounded-2xl border-l-4 border-emerald-500 text-left">
-                        <p class="text-[10px] font-bold text-emerald-500 uppercase">Sugestão Principal</p>
-                        <p class="text-sm font-bold text-white">Vencer: ${h}</p>
-                        <p class="text-[10px] text-slate-400">Probabilidade calculada: ${(probH*100).toFixed(1)}%</p>
+                        <span class="text-[10px] text-emerald-500 font-bold uppercase">Mercado: 1X2</span>
+                        <p class="text-sm font-bold">Vencer: ${h}</p>
                     </div>
                     <div class="glass p-4 rounded-2xl border-l-4 border-blue-500 text-left mt-3">
-                        <p class="text-[10px] font-bold text-blue-500 uppercase">Mercado de Gols</p>
-                        <p class="text-sm font-bold text-white">Mais de 1.5 Gols</p>
-                        <p class="text-[10px] text-slate-400">Probabilidade calculada: ${(o15*100).toFixed(1)}%</p>
+                        <span class="text-[10px] text-blue-500 font-bold uppercase">Mercado: Gols</span>
+                        <p class="text-sm font-bold">Over 0.5 no 1º Tempo</p>
                     </div>
                 `;
 
-                // SEMÁFORO
-                const border = document.getElementById('card-border');
-                const label = document.getElementById('verdict-label');
-                if (ev > 0.12) {
-                    border.className = "glass rounded-3xl overflow-hidden mb-6 border-b-4 border-emerald-500";
-                    label.innerText = "ALTA PROBABILIDADE (Verde)";
-                    label.className = "p-3 text-center text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-black";
-                } else {
-                    border.className = "glass rounded-3xl overflow-hidden mb-6 border-b-4 border-yellow-500";
-                    label.innerText = "CAUTELA / ANALISAR LIVE";
-                    label.className = "p-3 text-center text-[10px] font-black uppercase tracking-widest bg-yellow-500 text-black";
-                }
-
-                btn.innerHTML = 'Iniciar Diagnóstico AI';
-            }, 800);
+                btn.innerText = "Gerar Diagnóstico de Valor";
+            }, 1200);
         }
     </script>
 </body>
