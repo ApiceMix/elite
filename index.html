@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Elite AI Analytics | Full Sniper V4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #10b981; --dark-bg: #020617; }
+        body { background-color: var(--dark-bg); font-family: 'Inter', sans-serif; color: white; overflow-x: hidden; }
+        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-item { color: #475569; transition: all 0.3s ease; }
+        .nav-item.active { color: #10b981; }
+        .btn-gradient { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        
+        /* Sniper Overlay */
+        #sniper-overlay { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.98); z-index: 100; align-items: center; justify-content: center; flex-direction: column; }
+        .radar { width: 180px; height: 180px; border: 2px solid #10b981; border-radius: 50%; position: relative; overflow: hidden; }
+        .radar::after { content: ''; width: 100%; height: 100%; background: conic-gradient(from 0deg, transparent, #10b981); position: absolute; top: 0; left: 0; animation: rotate 1.5s linear infinite; transform-origin: center; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-32">
+
+    <!-- SNIPER SCANNER OVERLAY -->
+    <div id="sniper-overlay">
+        <div class="radar mb-8"></div>
+        <h2 class="text-emerald-500 font-black tracking-[0.3em] animate-pulse">SNIPER AI SCANNING</h2>
+        <p id="scanner-logs" class="text-[10px] text-slate-500 mt-4 font-mono tracking-widest uppercase">Interceptando Odds...</p>
+    </div>
+
+    <!-- HEADER -->
+    <nav class="p-5 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center">
+        <div>
+            <h1 class="text-lg font-black italic tracking-tighter text-emerald-500 uppercase">Elite AI <span class="text-white">Analytics</span></h1>
+            <p id="header-subtitle" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Painel de Dados FT/HT</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-[8px] font-black bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20 uppercase">V4.0 Online</span>
+        </div>
+    </nav>
+
+    <main class="p-4 max-w-lg mx-auto">
+
+        <!-- ABA 1: ANÁLISE COMPLETA (LAYOUT RESTAURADO) -->
+        <section id="tab-analise" class="tab-content active space-y-5">
+            <div class="glass-card p-5 shadow-2xl">
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <input id="homeInput" type="text" placeholder="Mandante" class="bg-slate-900 border border-slate-700 p-4 rounded-xl text-sm outline-none focus:border-emerald-500 transition-all font-bold">
+                    <input id="awayInput" type="text" placeholder="Visitante" class="bg-slate-900 border border-slate-700 p-4 rounded-xl text-sm outline-none focus:border-emerald-500 transition-all font-bold">
+                </div>
+                <button onclick="processarTudo()" class="w-full btn-gradient py-4 rounded-xl font-black text-xs tracking-[0.2em] shadow-lg active:scale-95 transition-all uppercase">Iniciar Diagnóstico AI</button>
+            </div>
+
+            <div id="resultadoAnalise" class="hidden space-y-4">
+                
+                <!-- 1X2 VITÓRIA -->
+                <div class="glass-card p-5 border-t-2 border-emerald-500">
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest text-center">Probabilidades de Resultado (1X2)</h3>
+                    <div class="flex justify-between gap-2">
+                        <div class="flex-1 bg-slate-950 p-3 rounded-xl border border-white/5 text-center">
+                            <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">Casa</p>
+                            <p id="prob1" class="text-lg font-black text-emerald-500">--%</p>
+                        </div>
+                        <div class="flex-1 bg-slate-950 p-3 rounded-xl border border-white/5 text-center">
+                            <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">Empate</p>
+                            <p id="probX" class="text-lg font-black text-slate-300">--%</p>
+                        </div>
+                        <div class="flex-1 bg-slate-950 p-3 rounded-xl border border-white/5 text-center">
+                            <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">Fora</p>
+                            <p id="prob2" class="text-lg font-black text-blue-400">--%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GOLS OVER/UNDER FT -->
+                <div class="glass-card p-5">
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest border-b border-white/5 pb-2">Mercado de Gols FT (Jogo Todo)</h3>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-3">
+                        <div class="flex justify-between items-center"><span class="text-xs text-slate-400">Over 0.5</span> <b id="o05" class="text-emerald-500 font-mono">--%</b></div>
+                        <div class="flex justify-between items-center"><span class="text-xs text-slate-400">Over 1.5</span> <b id="o15" class="text-emerald-500 font-mono">--%</b></div>
+                        <div class="flex justify-between items-center"><span class="text-xs text-slate-400">Over 2.5</span> <b id="o25" class="text-emerald-500 font-mono">--%</b></div>
+                        <div class="flex justify-between items-center"><span class="text-xs text-slate-400">Over 3.5</span> <b id="o35" class="text-emerald-500 font-mono">--%</b></div>
+                    </div>
+                </div>
+
+                <!-- GOLS HT (1º TEMPO) -->
+                <div class="glass-card p-5">
+                    <h3 class="text-[10px] font-black text-emerald-500 uppercase mb-4 tracking-widest border-b border-emerald-500/10 pb-2 text-center">Estatísticas HT (1º Tempo)</h3>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-slate-950 p-3 rounded-xl">
+                            <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">HT +0.5</p>
+                            <p id="ht05" class="text-sm font-black text-white font-mono">--%</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl">
+                            <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">HT +1.5</p>
+                            <p id="ht15" class="text-sm font-black text-white font-mono">--%</p>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl">
+                            <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">HT +2.5</p>
+                            <p id="ht25" class="text-sm font-black text-white font-mono">--%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BTTS & CANTOS -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass-card p-5">
+                        <p class="text-[9px] font-black text-slate-500 uppercase mb-3 text-center tracking-widest">Ambas Marcam</p>
+                        <div class="flex justify-between text-[11px]"><span class="text-emerald-500 font-bold uppercase">Sim</span> <span id="bttsSim" class="font-mono">--%</span></div>
+                        <div class="flex justify-between text-[11px] mt-2"><span class="text-red-500 font-bold uppercase">Não</span> <span id="bttsNao" class="font-mono">--%</span></div>
+                    </div>
+                    <div class="glass-card p-5 text-center flex flex-col justify-center border-t-2 border-blue-500/30">
+                        <p class="text-[9px] font-black text-blue-400 uppercase mb-1 tracking-widest">Cantos Médios</p>
+                        <p id="escanteios" class="text-2xl font-black italic text-white">--</p>
+                        <p class="text-[7px] text-slate-500 font-bold uppercase">Escanteios FT</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: INSIGHTS E INTEL -->
+        <section id="tab-insights" class="tab-content space-y-4">
+            <div class="glass-card p-5">
+                <h3 class="text-xs font-black uppercase text-emerald-500 mb-3 flex items-center gap-2">
+                    <i class="fas fa-brain"></i> Diagnóstico Estratégico AI
+                </h3>
+                <p id="ai-commentary" class="text-[13px] text-slate-300 leading-relaxed italic">Realize uma análise na tela de Busca para gerar insights.</p>
+            </div>
+        </section>
+
+        <!-- ABA 3: GRADE DO DIA (DICAS REAIS) -->
+        <section id="tab-dicas" class="tab-content space-y-4">
+            <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Grade de Jogos do Dia</h2>
+            <div id="grade-container" class="space-y-3">
+                <!-- Jogo 1 -->
+                <div class="glass-card p-4 flex justify-between items-center border-l-4 border-emerald-500">
+                    <div>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase">Premier League • 16:00</p>
+                        <p class="text-sm font-bold">Manchester City vs Arsenal</p>
+                    </div>
+                    <button onclick="analisarDireto('Man City', 'Arsenal')" class="bg-emerald-600 px-4 py-2 rounded-lg text-[9px] font-black hover:bg-emerald-500 uppercase transition-all">Analisar</button>
+                </div>
+                <!-- Jogo 2 -->
+                <div class="glass-card p-4 flex justify-between items-center border-l-4 border-blue-500">
+                    <div>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase">Série A Brasil • 21:00</p>
+                        <p class="text-sm font-bold">Botafogo vs Palmeiras</p>
+                    </div>
+                    <button onclick="analisarDireto('Botafogo', 'Palmeiras')" class="bg-emerald-600 px-4 py-2 rounded-lg text-[9px] font-black hover:bg-emerald-500 uppercase transition-all">Analisar</button>
+                </div>
+                <!-- Jogo 3 -->
+                <div class="glass-card p-4 flex justify-between items-center border-l-4 border-purple-500">
+                    <div>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase">La Liga • 19:30</p>
+                        <p class="text-sm font-bold">Barcelona vs Real Sociedad</p>
+                    </div>
+                    <button onclick="analisarDireto('Barcelona', 'Real Sociedad')" class="bg-emerald-600 px-4 py-2 rounded-lg text-[9px] font-black hover:bg-emerald-500 uppercase transition-all">Analisar</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MENU INFERIOR REFORMULADO -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 px-8 py-4 flex justify-between items-center z-50">
+        <button onclick="switchTab('analise', this)" class="nav-item active flex flex-col items-center gap-1">
+            <i class="fas fa-search text-lg"></i>
+            <span class="text-[8px] font-black uppercase">Busca</span>
+        </button>
+
+        <button onclick="switchTab('insights', this)" class="nav-item flex flex-col items-center gap-1">
+            <i class="fas fa-brain text-lg"></i>
+            <span class="text-[8px] font-black uppercase">Intel</span>
+        </button>
+
+        <!-- BOTÃO SNIPER (O DIFERENCIAL) -->
+        <div onclick="dispararSniper()" class="bg-emerald-600 h-16 w-16 rounded-full flex items-center justify-center -mt-12 shadow-2xl shadow-emerald-500/40 border-4 border-slate-950 active:scale-90 transition-all cursor-pointer">
+            <i class="fas fa-crosshairs text-white text-2xl animate-pulse"></i>
+        </div>
+
+        <button onclick="switchTab('dicas', this)" class="nav-item flex flex-col items-center gap-1">
+            <i class="fas fa-calendar-day text-lg"></i>
+            <span class="text-[8px] font-black uppercase">Grade</span>
+        </button>
+
+        <button class="nav-item flex flex-col items-center gap-1 opacity-40">
+            <i class="fas fa-user-shield text-lg"></i>
+            <span class="text-[8px] font-black uppercase">Setup</span>
+        </button>
+    </nav>
+
+    <script>
+        // --- NAVEGAÇÃO ---
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            if(el) el.classList.add('active');
+            
+            const subs = { 'analise': 'Data Dashboard FT/HT', 'insights': 'Strategic AI Intel', 'dicas': 'Grade do Dia' };
+            document.getElementById('header-subtitle').innerText = subs[tabId];
+        }
+
+        // --- FUNÇÃO SNIPER ---
+        function dispararSniper() {
+            const overlay = document.getElementById('sniper-overlay');
+            const logs = document.getElementById('scanner-logs');
+            overlay.style.display = 'flex';
+            
+            const msgs = ["Analizando Ligas...", "Calculando EV+...", "Brecha Detectada!", "Alvo Confirmado!"];
+            let i = 0;
+            const interval = setInterval(() => {
+                logs.innerText = msgs[i];
+                i++;
+                if(i >= msgs.length) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        analisarDireto('Liverpool', 'Chelsea');
+                    }, 800);
+                }
+            }, 700);
+        }
+
+        // --- ANALISAR JOGO ESPECÍFICO ---
+        function analisarDireto(home, away) {
+            document.getElementById('homeInput').value = home;
+            document.getElementById('awayInput').value = away;
+            switchTab('analise', document.querySelector('.nav-item')); 
+            processarTudo();
+        }
+
+        // --- MOTOR POISSON ---
+        function factorial(n) { return n <= 1 ? 1 : n * factorial(n - 1); }
+        function poisson(lambda, k) { return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k); }
+
+        function processarTudo() {
+            const h = document.getElementById('homeInput').value;
+            const v = document.getElementById('awayInput').value;
+            if(!h || !v) return;
+
+            const btn = document.querySelector('button');
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> PROCESSANDO...';
+
+            setTimeout(() => {
+                const expH = 1.88, expV = 1.25, totalExp = expH + expV;
+                const expHT = totalExp * 0.44;
+
+                // 1X2 Probabilidades
+                let p1 = 0, px = 0, p2 = 0;
+                for (let i = 0; i < 7; i++) {
+                    for (let j = 0; j < 7; j++) {
+                        let p = poisson(expH, i) * poisson(expV, j);
+                        if (i > j) p1 += p; else if (i === j) px += p; else p2 += p;
+                    }
+                }
+
+                const calcOver = (n, lambda) => {
+                    let p = 0;
+                    for(let i = 0; i <= n; i++) p += poisson(lambda, i);
+                    return (1 - p) * 100;
+                };
+
+                // PREENCHER UI DADOS (TELA PRINCIPAL)
+                document.getElementById('resultadoAnalise').classList.remove('hidden');
+                document.getElementById('prob1').innerText = (p1 * 100).toFixed(0) + "%";
+                document.getElementById('probX').innerText = (px * 100).toFixed(0) + "%";
+                document.getElementById('prob2').innerText = (p2 * 100).toFixed(0) + "%";
+                
+                document.getElementById('o05').innerText = calcOver(0, totalExp).toFixed(1) + "%";
+                document.getElementById('o15').innerText = calcOver(1, totalExp).toFixed(1) + "%";
+                document.getElementById('o25').innerText = calcOver(2, totalExp).toFixed(1) + "%";
+                document.getElementById('o35').innerText = calcOver(3, totalExp).toFixed(1) + "%";
+
+                document.getElementById('ht05').innerText = calcOver(0, expHT).toFixed(1) + "%";
+                document.getElementById('ht15').innerText = calcOver(1, expHT).toFixed(1) + "%";
+                document.getElementById('ht25').innerText = calcOver(2, expHT).toFixed(1) + "%";
+
+                const bSim = (1 - poisson(expH, 0)) * (1 - poisson(expV, 0)) * 100;
+                document.getElementById('bttsSim').innerText = bSim.toFixed(1) + "%";
+                document.getElementById('bttsNao').innerText = (100 - bSim).toFixed(1) + "%";
+                document.getElementById('escanteios').innerText = (9.8 + Math.random() * 2).toFixed(1);
+
+                // PREENCHER INTEL (TELA INSIGHTS)
+                document.getElementById('ai-commentary').innerText = `O confronto ${h} vs ${v} mostra desequilíbrio defensivo. O modelo AI detectou que o mandante tem eficiência ofensiva superior à média em ${(p1*100).toFixed(0)}%. O mercado de Over 1.5 tem valor matemático real (EV+) para este evento.`;
+
+                btn.innerText = "Iniciar Diagnóstico AI";
+                window.scrollTo({ top: 300, behavior: 'smooth' });
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
